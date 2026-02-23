@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    # To initialize Next.js app in the container, we might override the CMD
+    # initially via docker-compose run, but for now we set the default.
+    command: npm run dev
