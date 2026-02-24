@@ -101,8 +101,17 @@ export async function POST(req) {
     return NextResponse.json(getMockResponse(kyusei));
   }
 
+  const result = await callGeminiWithRetry(apiKey, prompt);
+  if (!result) {
+    return NextResponse.json(getMockResponse(kyusei));
+  }
+  return NextResponse.json(result);
+}
+
+// GeminiへのAPI呼び出し（429時は1回だけリトライ、失敗時はnullを返す）
+async function callGeminiWithRetry(apiKey, prompt, attempt = 1) {
   try {
-    const response = await fetch(
+    const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
@@ -114,44 +123,39 @@ export async function POST(req) {
       },
     );
 
-    // 429の場合は一度だけリトライ（5秒後）
-    if (response.status === 429) {
-      console.warn("Gemini rate limited. Retrying after 5s...");
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
-      const retry = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { response_mime_type: "application/json" },
-          }),
-        },
-      );
-      if (!retry.ok) {
-        console.warn("Retry also failed. Using fallback.");
-        return NextResponse.json(getMockResponse(kyusei));
+    if (res.status === 429) {
+      if (attempt >= 2) {
+        console.warn(
+          "Gemini 429: rate limit exceeded after retry. Using fallback.",
+        );
+        return null;
       }
-      const retryData = await retry.json();
-      const retryText = retryData.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!retryText) return NextResponse.json(getMockResponse(kyusei));
-      return NextResponse.json(JSON.parse(retryText));
+      const waitSec = 10;
+      console.warn(
+        `Gemini 429: rate limited. Retrying in ${waitSec}s... (attempt ${attempt})`,
+      );
+      await new Promise((r) => setTimeout(r, waitSec * 1000));
+      return callGeminiWithRetry(apiKey, prompt, attempt + 1);
     }
 
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+    if (!res.ok) {
+      console.warn(`Gemini error: ${res.status}. Using fallback.`);
+      return null;
     }
 
-    const data = await response.json();
+    const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error("Empty response from Gemini");
+    if (!text) return null;
 
-    return NextResponse.json(JSON.parse(text));
-  } catch (error) {
-    console.error("API Route Error:", error);
-    return NextResponse.json(getMockResponse(kyusei));
+    try {
+      return JSON.parse(text);
+    } catch {
+      console.warn("Gemini response was not valid JSON. Using fallback.");
+      return null;
+    }
+  } catch (err) {
+    console.warn("Network error calling Gemini:", err.message);
+    return null;
   }
 }
 
