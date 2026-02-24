@@ -114,6 +114,32 @@ export async function POST(req) {
       },
     );
 
+    // 429の場合は一度だけリトライ（5秒後）
+    if (response.status === 429) {
+      console.warn("Gemini rate limited. Retrying after 5s...");
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      const retry = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { response_mime_type: "application/json" },
+          }),
+        },
+      );
+      if (!retry.ok) {
+        console.warn("Retry also failed. Using fallback.");
+        return NextResponse.json(getMockResponse(kyusei));
+      }
+      const retryData = await retry.json();
+      const retryText = retryData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!retryText) return NextResponse.json(getMockResponse(kyusei));
+      return NextResponse.json(JSON.parse(retryText));
+    }
+
     if (!response.ok) {
       throw new Error(`Gemini API error: ${response.status}`);
     }
