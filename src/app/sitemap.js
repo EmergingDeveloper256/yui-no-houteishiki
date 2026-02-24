@@ -1,28 +1,30 @@
 export default function sitemap() {
+  const base = "https://mystic-edge.example.com";
+  const topics = ["love", "affair", "moving", "work"];
   return [
     {
-      url: "https://mystic-edge.example.com",
+      url: base,
       lastModified: new Date(),
-      changeFrequency: "monthly",
+      changeFrequency: "weekly",
       priority: 1,
     },
-    {
-      url: "https://mystic-edge.example.com/input?type=love",
+    ...topics.map((t) => ({
+      url: `${base}/input?type=${t}`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
+    })),
+    {
+      url: `${base}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
     {
-      url: "https://mystic-edge.example.com/input?type=affair",
+      url: `${base}/disclaimer`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: "https://mystic-edge.example.com/input?type=compatibility",
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
   ];
 }

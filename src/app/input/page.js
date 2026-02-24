@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { TOPICS } from "../../utils/topics";
 import "../globals.css";
 
 function InputForm() {
@@ -29,11 +30,7 @@ function InputForm() {
     }, 1500);
   };
 
-  const typeLabels = {
-    love: "真実の愛占い / EMOTION_SYNC",
-    affair: "秘密の愛占い / SECRET_LOGIC",
-    compatibility: "真実の愛占い / ENTITY_MATCH",
-  };
+  const topic = TOPICS[type] || TOPICS.love;
 
   return (
     <div
@@ -71,7 +68,7 @@ function InputForm() {
             fontSize: "1.5rem",
           }}
         >
-          {typeLabels[type] || "APPRAISAL_SESSION"}
+          {topic.label} / {topic.mode}
         </h1>
         <p
           style={{
@@ -81,7 +78,7 @@ function InputForm() {
             color: "var(--foreground)",
           }}
         >
-          あなたと相手の情報を同期し、運命の周波数を特定します。
+          あなたの生体データを同期し、九星気学による精密な演算を開始します。
         </p>
       </header>
 
@@ -166,79 +163,85 @@ function InputForm() {
         </section>
 
         {/* Partner Info */}
-        <section
-          style={{
-            padding: "1rem",
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(212, 175, 55, 0.1)",
-          }}
-        >
-          <h3
-            className="scanning-label"
+        {["love", "affair"].includes(type) && (
+          <section
             style={{
-              marginBottom: "1rem",
-              fontSize: "0.7rem",
-              borderBottom: "1px solid rgba(212, 175, 55, 0.2)",
-              paddingBottom: "0.4rem",
+              padding: "1rem",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(212, 175, 55, 0.1)",
             }}
           >
-            &gt; TARGET_PROFILE (相手)
-          </h3>
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}
-          >
-            <div
+            <h3
+              className="scanning-label"
               style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.4rem",
+                marginBottom: "1rem",
+                fontSize: "0.7rem",
+                borderBottom: "1px solid rgba(212, 175, 55, 0.2)",
+                paddingBottom: "0.4rem",
               }}
             >
-              <label style={{ fontSize: "0.75rem", color: "var(--accent)" }}>
-                お名前 / Alias
-              </label>
-              <input
-                type="text"
-                value={partnerName}
-                onChange={(e) => setPartnerName(e.target.value)}
-                placeholder="あの人"
-                style={{
-                  background: "rgba(0,0,0,0.3)",
-                  border: "1px solid rgba(212, 175, 55, 0.2)",
-                  padding: "0.8rem",
-                  color: "#fff",
-                  outline: "none",
-                  borderRadius: "4px",
-                }}
-              />
-            </div>
+              &gt; TARGET_PROFILE (相手)
+            </h3>
             <div
               style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.4rem",
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: "1rem",
               }}
             >
-              <label style={{ fontSize: "0.75rem", color: "var(--accent)" }}>
-                生年月日 / Birthdate
-              </label>
-              <input
-                type="date"
-                value={partnerDob}
-                onChange={(e) => setPartnerDob(e.target.value)}
+              <div
                 style={{
-                  background: "rgba(0,0,0,0.3)",
-                  border: "1px solid rgba(212, 175, 55, 0.2)",
-                  padding: "0.8rem",
-                  color: "#fff",
-                  outline: "none",
-                  colorScheme: "dark",
-                  borderRadius: "4px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.4rem",
                 }}
-              />
+              >
+                <label style={{ fontSize: "0.75rem", color: "var(--accent)" }}>
+                  お名前 / Alias
+                </label>
+                <input
+                  type="text"
+                  value={partnerName}
+                  onChange={(e) => setPartnerName(e.target.value)}
+                  placeholder="あの人"
+                  style={{
+                    background: "rgba(0,0,0,0.3)",
+                    border: "1px solid rgba(212, 175, 55, 0.2)",
+                    padding: "0.8rem",
+                    color: "#fff",
+                    outline: "none",
+                    borderRadius: "4px",
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.4rem",
+                }}
+              >
+                <label style={{ fontSize: "0.75rem", color: "var(--accent)" }}>
+                  生年月日 / Birthdate
+                </label>
+                <input
+                  type="date"
+                  value={partnerDob}
+                  onChange={(e) => setPartnerDob(e.target.value)}
+                  style={{
+                    background: "rgba(0,0,0,0.3)",
+                    border: "1px solid rgba(212, 175, 55, 0.2)",
+                    padding: "0.8rem",
+                    color: "#fff",
+                    outline: "none",
+                    colorScheme: "dark",
+                    borderRadius: "4px",
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <button
           type="submit"

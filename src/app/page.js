@@ -1,5 +1,13 @@
 import Link from "next/link";
+import { TOPICS } from "../utils/topics";
+import { homeJsonLd } from "../utils/jsonLd";
 import "./globals.css";
+
+export const metadata = {
+  title: "結の方程式 | 九星気学×AI占い｜本命星で紐解く運命鑑定",
+  description:
+    "九星気学とAIを融合した次世代の占いサービス。生年月日から本命星・月命星を算出し、恋愛・引越し・仕事・不倫など、あなたの人生に寄り添う精密な運命鑑定をお届けします。",
+};
 
 export default function Home() {
   return (
@@ -10,11 +18,41 @@ export default function Home() {
         margin: "0 auto",
       }}
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
+      />
       <header style={{ marginBottom: "3rem", textAlign: "center" }}>
+        {/* 九星気学バッジ */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            border: "1px solid rgba(212, 175, 55, 0.5)",
+            padding: "0.3rem 1rem",
+            marginBottom: "1.5rem",
+            borderRadius: "2px",
+            background: "rgba(212, 175, 55, 0.05)",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "0.7rem",
+              color: "var(--accent)",
+              letterSpacing: "3px",
+            }}
+          >
+            ☯ 九星気学 × AI
+          </span>
+        </div>
+
         <p className="scanning-label" style={{ marginBottom: "0.5rem" }}>
-          AI Oracle System v2.4 // Ready
+          Kyusei-Kigaku Oracle Engine // Ready
         </p>
+
         <h1 className="title-mystic">結の方程式</h1>
+
         <p
           style={{
             color: "var(--accent)",
@@ -24,20 +62,62 @@ export default function Home() {
             fontFamily: "serif",
           }}
         >
-          AIによってあなたの運命を精密に占います
+          九星気学×AIで紐解く、あなたの運命
         </p>
+
         <p
           style={{
             marginTop: "1.5rem",
-            opacity: 0.7,
-            fontSize: "0.85rem",
+            opacity: 0.8,
+            fontSize: "0.9rem",
             maxWidth: "600px",
             margin: "1.5rem auto 0",
-            lineHeight: "1.6",
+            lineHeight: "1.8",
           }}
         >
-          最先端のAIアルゴリズムが、あなたの生データから目に見えない運命の糸を読み解き、真実の道を示します。
+          生年月日から
+          <strong style={{ color: "var(--accent)" }}>本命星・月命星</strong>
+          を算出。
+          古来からの叡智「九星気学」と最先端AIが融合し、恋愛・仕事・引越しの方位まで、あなたの運命を精密に解読します。
         </p>
+
+        {/* 九つの星 */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "0.5rem",
+            marginTop: "2rem",
+            maxWidth: "600px",
+            margin: "2rem auto 0",
+          }}
+        >
+          {[
+            "一白水星",
+            "二黒土星",
+            "三碧木星",
+            "四緑木星",
+            "五黄土星",
+            "六白金星",
+            "七赤金星",
+            "八白土星",
+            "九紫火星",
+          ].map((star, i) => (
+            <span
+              key={i}
+              style={{
+                fontSize: "0.65rem",
+                padding: "0.2rem 0.6rem",
+                border: "1px solid rgba(212, 175, 55, 0.2)",
+                color: "rgba(212, 175, 55, 0.6)",
+                letterSpacing: "1px",
+              }}
+            >
+              {star}
+            </span>
+          ))}
+        </div>
       </header>
 
       <section
@@ -45,73 +125,43 @@ export default function Home() {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           gap: "1.5rem",
-          maxWidth: "800px",
+          maxWidth: "900px",
           margin: "0 auto",
         }}
       >
-        <Link href="/input?type=compatibility">
-          <div
-            className="mystic-card"
-            style={{
-              cursor: "pointer",
-              height: "100%",
-              borderColor: "rgba(212, 175, 55, 0.4)",
-            }}
-          >
-            <h2
+        {Object.values(TOPICS).map((topic) => (
+          <Link key={topic.id} href={`/input?type=${topic.id}`}>
+            <div
+              className="mystic-card"
               style={{
-                color: "var(--accent)",
-                marginBottom: "1rem",
-                borderBottom: "1px solid rgba(212, 175, 55, 0.2)",
-                paddingBottom: "0.5rem",
-                fontSize: "1.2rem",
+                cursor: "pointer",
+                height: "100%",
+                borderColor: "rgba(212, 175, 55, 0.4)",
               }}
             >
-              ✨ 真実の愛占い
-            </h2>
-            <p style={{ fontSize: "0.9rem", lineHeight: "1.6" }}>
-              二人の魂のデータセットを照合し、**真実の相性**を算出。絆を最大化するためのパラメータを特定する相性占いです。
-            </p>
-            <div
-              className="scanning-label"
-              style={{ marginTop: "1.5rem", textAlign: "right" }}
-            >
-              Analysis Mode: Entity_Match
+              <h2
+                style={{
+                  color: "var(--accent)",
+                  marginBottom: "1rem",
+                  borderBottom: "1px solid rgba(212, 175, 55, 0.2)",
+                  paddingBottom: "0.5rem",
+                  fontSize: "1.2rem",
+                }}
+              >
+                {topic.icon} {topic.label}
+              </h2>
+              <p style={{ fontSize: "0.9rem", lineHeight: "1.6" }}>
+                {topic.description}
+              </p>
+              <div
+                className="scanning-label"
+                style={{ marginTop: "1.5rem", textAlign: "right" }}
+              >
+                Analysis Mode: {topic.mode}
+              </div>
             </div>
-          </div>
-        </Link>
-
-        <Link href="/input?type=affair">
-          <div
-            className="mystic-card"
-            style={{
-              cursor: "pointer",
-              height: "100%",
-              borderColor: "rgba(212, 175, 55, 0.4)",
-            }}
-          >
-            <h2
-              style={{
-                color: "var(--accent)",
-                marginBottom: "1rem",
-                borderBottom: "1px solid rgba(212, 175, 55, 0.2)",
-                paddingBottom: "0.5rem",
-                fontSize: "1.2rem",
-              }}
-            >
-              🌑 秘密の愛占い
-            </h2>
-            <p style={{ fontSize: "0.9rem", lineHeight: "1.6" }}>
-              誰にも言えない**不倫の関係性**をAIが多角的に解析。不可視の因果と、辿り着くべき終着点を導き出す不倫占いです。
-            </p>
-            <div
-              className="scanning-label"
-              style={{ marginTop: "1.5rem", textAlign: "right" }}
-            >
-              Analysis Mode: Secret_Logic
-            </div>
-          </div>
-        </Link>
+          </Link>
+        ))}
       </section>
 
       <footer

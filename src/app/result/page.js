@@ -3,7 +3,9 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { calculateFortune } from "../../utils/fortuneLogic";
+import { TOPICS } from "../../utils/topics";
+import { getKyuseiInfo } from "../../utils/kyuseiLogic";
+import { generateAIFortune } from "../../utils/aiFortune";
 import "../globals.css";
 
 function ResultContent() {
@@ -13,26 +15,38 @@ function ResultContent() {
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setShareUrl(window.location.origin);
-    }
-
     const type = searchParams.get("type");
     const selfDob = searchParams.get("selfDob");
     const partnerDob = searchParams.get("partnerDob");
     const selfName = searchParams.get("selfName");
     const partnerName = searchParams.get("partnerName");
 
-    const timer = setTimeout(() => {
-      const data = calculateFortune(
-        selfDob,
-        partnerDob,
-        selfName,
-        partnerName,
-        type,
-      );
-      setResult(data);
-      setLoading(false);
+    if (typeof window !== "undefined" && !shareUrl) {
+      setShareUrl(window.location.origin);
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const data = await generateAIFortune({
+          selfDob,
+          partnerDob,
+          selfName,
+          partnerName,
+          type,
+        });
+
+        // 九星情報を付加
+        const kyusei = getKyuseiInfo(selfDob);
+        setResult({
+          ...data,
+          kyusei: kyusei,
+          typeLabel: TOPICS[type]?.label || "総合精密鑑定",
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }, 2500);
 
     return () => clearTimeout(timer);
@@ -40,8 +54,9 @@ function ResultContent() {
 
   const getShareText = () => {
     if (!result) return "";
-    const name = searchParams.get("partnerName") || "あの人";
-    return `【結の方程式】AI診断の結果、${name}との相性は ${result.affinity}%（${result.type}）でした！あなたの運命もAIで占ってみませんか？ #AI占い #相性診断`;
+    const name = searchParams.get("partnerName") || "自分";
+    const topic = TOPICS[searchParams.get("type")]?.label || "AI鑑定";
+    return `【結の方程式】${topic}の結果、私の運勢指数は ${result.affinity}% でした！本命星は「${result.kyusei?.honmei?.name}」。あなたの運命もAIで占ってみませんか？ #AI占い #九星気学`;
   };
 
   const shareX = () => {
@@ -162,7 +177,7 @@ function ResultContent() {
           }}
         >
           <span className="scanning-label" style={{ fontSize: "0.65rem" }}>
-            SYNC_AFFINITY
+            FORTUNE_INDEX
           </span>
           <div
             style={{
@@ -185,7 +200,17 @@ function ResultContent() {
               letterSpacing: "1px",
             }}
           >
-            {result.type}
+            {result.kyusei?.honmei?.name}
+          </span>
+          <span
+            style={{
+              fontSize: "0.6rem",
+              color: "var(--accent)",
+              opacity: 0.8,
+              marginTop: "0.2rem",
+            }}
+          >
+            {result.typeLabel}
           </span>
         </div>
       </header>
@@ -249,78 +274,96 @@ function ResultContent() {
         </div>
 
         {/* アフィリエイト誘導 */}
-        <div
-          style={{
-            position: "relative",
-            background: "rgba(0,0,0,0.6)",
-            padding: "1.5rem",
-            border: "1px solid var(--accent)",
-            marginTop: "3rem",
-            boxShadow: "0 0 30px rgba(0, 0, 0, 0.8)",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: "-10px",
-              left: "1rem",
-              background: "var(--accent)",
-              color: "#000",
-              fontSize: "0.6rem",
-              padding: "0 0.5rem",
-              fontWeight: "bold",
-            }}
-          >
-            AD / PR
-          </div>
-          <div
-            className="scanning-label"
-            style={{ marginBottom: "0.8rem", color: "var(--accent)" }}
-          >
-            Expert_Cognitive_Sync
-          </div>
-          <h3
-            style={{
-              marginBottom: "1.2rem",
-              color: "#fff",
-              fontSize: "1.1rem",
-              fontFamily: "serif",
-            }}
-          >
-            より詳細な未来を確定させるために
-          </h3>
-          <p
-            style={{
-              fontSize: "0.85rem",
-              opacity: 0.8,
-              marginBottom: "2rem",
-              lineHeight: "1.7",
-            }}
-          >
-            AIの演算では、二人の未来に不確定な分岐点が観測されました。
-            <br />
-            ここから先、あの人の具体的な行動や、最終的な関係の結末を解明するには、経験豊富な鑑定士による直感的な介入が鍵となります。
-          </p>
+        {(() => {
+          const topic = TOPICS[searchParams.get("type")] || TOPICS.love;
+          const affiliate = topic.affiliate;
+          return (
+            <div
+              style={{
+                position: "relative",
+                background: "rgba(0,0,0,0.6)",
+                padding: "1.5rem",
+                border: "1px solid var(--accent)",
+                marginTop: "3rem",
+                boxShadow: "0 0 30px rgba(0, 0, 0, 0.8)",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-10px",
+                  left: "1rem",
+                  background: "var(--accent)",
+                  color: "#000",
+                  fontSize: "0.6rem",
+                  padding: "0 0.5rem",
+                  fontWeight: "bold",
+                }}
+              >
+                AD / PR
+              </div>
+              <div
+                className="scanning-label"
+                style={{ marginBottom: "0.8rem", color: "var(--accent)" }}
+              >
+                Expert_Cognitive_Sync
+              </div>
+              <h3
+                style={{
+                  marginBottom: "1.2rem",
+                  color: "#fff",
+                  fontSize: "1.1rem",
+                  fontFamily: "serif",
+                }}
+              >
+                {affiliate.text}
+              </h3>
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  opacity: 0.8,
+                  marginBottom: "2rem",
+                  lineHeight: "1.7",
+                }}
+              >
+                {affiliate.description}
+                <br />
+                九星気学の演算結果をより深く、あなたの現実に適用するための個別鑑定プロトコルをご用意しました。
+              </p>
 
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-          >
-            <a
-              href="https://example.com/affiliate"
-              target="_blank"
-              className="mystic-button"
-              style={{ textAlign: "center", fontSize: "1rem", padding: "1rem" }}
-            >
-              専門鑑定士に詳細を依頼する
-            </a>
-            <p
-              className="scanning-label"
-              style={{ textAlign: "center", fontSize: "0.6rem", opacity: 0.5 }}
-            >
-              ※外部の提携先プラットフォームへ接続します
-            </p>
-          </div>
-        </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
+                <a
+                  href={affiliate.url}
+                  target="_blank"
+                  className="mystic-button"
+                  style={{
+                    textAlign: "center",
+                    fontSize: "1rem",
+                    padding: "1rem",
+                  }}
+                >
+                  {affiliate.text}
+                </a>
+                <p
+                  className="scanning-label"
+                  style={{
+                    textAlign: "center",
+                    fontSize: "0.6rem",
+                    opacity: 0.5,
+                  }}
+                >
+                  ※外部の提携先プラットフォームへ接続します
+                </p>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* シェアセクション */}
